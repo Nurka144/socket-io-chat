@@ -1,11 +1,15 @@
 <template>
   <div class="hello">
     <h1>{{ msg }}</h1>
+    <button v-if="auth" type="submit" class="btn btn-primary" @click.prevent="logout()">Logout</button>
     <div class="container">
-      <li v-for="user of newusers" :key={user}>
-
-        </li>
-      <div class="row">
+      <div>Users</div>
+      <User
+        v-for="user in users"
+        :key="user._id"
+        :user="user"
+      />
+      <div class="row" v-if="!auth">
         <div style="display: flex; justify-content: center; width: 100%; margin-top: 5rem;">
           <div class="col-sm-4">
             <form>
@@ -19,8 +23,11 @@
           </div>
         </div>
       </div>
-      <div v-if="auth">
-        ascaa
+      <div v-else>
+        <div>
+          <input type="text" class="form-control"/>
+          <button type="submit" class="btn btn-primary" @click.prevent="loginUser()">Send</button>
+        </div>
       </div>
     </div>
   </div>
@@ -28,10 +35,12 @@
 
 <script>
 
-import {socketio} from '../main'
+import socket from '../socket'
+import User from "./Users";
 
 export default {
   name: 'MainPage',
+  components: { User },
   props: {
     msg: String
   },
@@ -39,14 +48,14 @@ export default {
     return {
       login: "",
       auth: "",
-      newusers: []
+      users: []
     }
   },
   created() {
-socketio.emit('getAllUsers');
-      socketio.on('returnAllUsers', function(data) {
-        console.log(data)
-      })
+    socket.connect()
+    socket.on('users', (data) => {
+      this.users = data
+    })
   },
   methods: {
     loginUser() {
@@ -56,7 +65,20 @@ socketio.emit('getAllUsers');
       .then(data => {
         this.$store.commit('login', data.data._id)
         this.auth = this.$store.state.userid
-      }) 
+        socket.on('users', (data) => {
+          this.users = data
+        })
+
+      })
+    
+    },
+    logout() {
+      socket.emit('logon', this.auth)
+      socket.on('users', (data) => {
+          this.users = data
+        })
+
+      this.auth = ""
     }
   },
 }
