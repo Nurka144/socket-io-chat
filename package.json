@@ -5,13 +5,16 @@
   "main": "index.js",
   "scripts": {
     "start": "node index",
-    "start:dev": "nodemon index"
+    "start:dev": "nodemon index",
+    "start:client": "npm run serve --prefix client",
+    "dev": "concurrently \"npm run start:dev\" \"npm run start:client\""
   },
   "author": "Tuzelbekov Nurbek",
   "license": "ISC",
   "dependencies": {
     "app-root-path": "^3.0.0",
     "bootstrap": "^4.6.0",
+    "concurrently": "^6.0.0",
     "cors": "^2.8.5",
     "express": "^4.17.1",
     "jquery": "^3.5.1",

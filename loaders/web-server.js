@@ -5,6 +5,11 @@ const bodyParser = require('body-parser');
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
+const userScheme = new Schema({login: String, is_online: Number});
+const User = mongoose.model("User", userScheme);
+
+module.exports.User = User;
+
 const log = require('../config/winston');
 const config = require('../config/config');
 const socket = require('./socket');
@@ -28,13 +33,11 @@ async function init() {
         
         socket(httpServer)
 
-        const userScheme = new Schema({login: String, password: String});
-        const User = mongoose.model("User", userScheme);
-
         app.post('/login', async (req, res) => {
             try {
-                const user = await User.findOne({login: req.body.login, password: req.body.password});
-                res.status(200).json(user._id)
+                const user = new User({login: req.body.login, is_online: 1});
+                let newuser = await user.save();
+                res.status(200).json(newuser)
             } catch (error) {
                 res.status(500).json({errCode: -1, errMsg: "Error Request"})
             }
