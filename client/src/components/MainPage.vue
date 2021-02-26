@@ -65,12 +65,12 @@ export default {
         login: this.login
       })
       socket.on('login', (data) => {
-        this.auth = data._id
+        this.auth = data
       })
     
     },
     logout() {
-      socket.emit('logout', {id: this.auth})
+      socket.emit('logout', {id: this.auth._id})
       this.auth = ""
     }
   },
