@@ -8,33 +8,34 @@ module.exports = function(server) {
           }
     });
 
-    let users;
-    io.on('connection', async function( client ) {
-        console.log(client.id) //this will now work
-        listUsers();
+    let users = [];
 
-        client.on('connect', function() {
-            listUsers()
-            client.emit('users', users)
+    io.on('connection', async function( socket ) {
+        socket.join('some room');
+        socket.on('login', async ({login}) => {
+            const findUser = await User.find({login: login});
+            let user;
+            if (findUser.length > 0) {
+                ({data: user} = await User.updateOne({login: login}, {is_online: 1}));  
+            } else {
+                let create = new User({login: req.body.login, is_online: 1});
+                user = await create.save();
+            }
+            getUsers()
+                .then((users) => {
+                    io.to('some room').emit('login', user)
+                    io.to('some room').emit('users', users)
+                })
+            
         })
 
-        client.on('disconnect', async function( id ) {
-            // await User.updateOne({_id: id}, {is_online: 0})
-            console.log('user with ID ' + id + ' has disconnected');
-            listUsers()
-        });
 
-        client.on('logon', async function(id) {
-            await User.updateOne({_id: id}, {is_online: 0})
-            listUsers()
-            console.log(users)
-            client.emit('users', users)
-        })
-
-        async function listUsers() {
-            users = await User.find({});
+        const getUsers = async () => {
+            return new Promise(async (resolve, reject) => {
+                let data = await User.find({});
+                resolve(data)
+            })
         }
-
 
     });
 

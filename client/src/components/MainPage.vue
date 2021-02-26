@@ -52,6 +52,8 @@ export default {
     }
   },
   created() {
+    this.$http.get('http://localhost:3000/users')
+      .then(data => this.users = data.data)
     socket.connect()
     socket.on('users', (data) => {
       this.users = data
@@ -59,24 +61,23 @@ export default {
   },
   methods: {
     loginUser() {
-      this.$http.post('http://localhost:3000/login', {
-        login: this.login, 
-      })
-      .then(data => {
-        this.$store.commit('login', data.data._id)
-        this.auth = this.$store.state.userid
-        socket.on('users', (data) => {
-          this.users = data
-        })
+    //   this.$http.post('http://localhost:3000/login', {
+    //     login: this.login, 
+    //   })
+    //   .then(data => {
+    //     this.$store.commit('login', data.data._id)
+    //     this.auth = this.$store.state.userid
 
-      })
+    //   })
+
+    socket.emit('login', {
+      login: this.login
+    })
     
     },
     logout() {
       socket.emit('logon', this.auth)
-      socket.on('users', (data) => {
-          this.users = data
-        })
+  
 
       this.auth = ""
     }
