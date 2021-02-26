@@ -13,6 +13,7 @@ module.exports.User = User;
 const log = require('../config/winston');
 const config = require('../config/config');
 const socket = require('./socket');
+const router = require('./routes');
 
 let httpServer;
 let api = '/api/1.0';
@@ -33,10 +34,7 @@ async function init() {
         
         socket(httpServer)
 
-      app.get('/users', async (req, res) => {
-        let users = await User.find({});
-        res.status(200).json(users);
-      })
+        app.use(api, router)
 
         httpServer.
             listen(config.get('web-server:port'))

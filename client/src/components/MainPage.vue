@@ -52,7 +52,7 @@ export default {
     }
   },
   created() {
-    this.$http.get('http://localhost:3000/users')
+    this.$http.get('http://localhost:3000/api/1.0/users')
       .then(data => this.users = data.data)
     socket.connect()
     socket.on('users', (data) => {
