@@ -61,24 +61,16 @@ export default {
   },
   methods: {
     loginUser() {
-    //   this.$http.post('http://localhost:3000/login', {
-    //     login: this.login, 
-    //   })
-    //   .then(data => {
-    //     this.$store.commit('login', data.data._id)
-    //     this.auth = this.$store.state.userid
-
-    //   })
-
-    socket.emit('login', {
-      login: this.login
-    })
+      socket.emit('login', {
+        login: this.login
+      })
+      socket.on('login', (data) => {
+        this.auth = data._id
+      })
     
     },
     logout() {
-      socket.emit('logon', this.auth)
-  
-
+      socket.emit('logout', {id: this.auth})
       this.auth = ""
     }
   },

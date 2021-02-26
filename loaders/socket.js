@@ -15,7 +15,8 @@ module.exports = function(server) {
             const findUser = await User.find({login: login});
             let user;
             if (findUser.length > 0) {
-                ({data: user} = await User.updateOne({login: login}, {is_online: 1}));  
+                user = await User.updateOne({login: login}, {is_online: 1});
+                user = findUser[0]  
             } else {
                 let create = new User({login: req.body.login, is_online: 1});
                 user = await create.save();
@@ -26,6 +27,14 @@ module.exports = function(server) {
                     io.to('some room').emit('users', users)
                 })
             
+        })
+
+        socket.on('logout', async ({id}) => {
+            await User.updateOne({_id: id}, {is_online: 0})
+            getUsers()
+                .then((users) => {
+                    io.to('some room').emit('users', users)
+                })
         })
 
 
