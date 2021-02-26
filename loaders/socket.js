@@ -8,7 +8,6 @@ module.exports = function(server) {
           }
     });
 
-    let users = [];
 
     io.on('connection', async function( socket ) {
         socket.join('some room');

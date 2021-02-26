@@ -38,23 +38,6 @@ async function init() {
         res.status(200).json(users);
       })
 
-    //   app.post('/login', async (req, res) => {
-    //     const findUser = await User.find({login: req.body.login});
-    //     if (findUser.length > 0) {
-    //         let data = await User.updateOne({login: req.body.login}, {is_online: 1})   
-    //     }
-        // let u;
-        // if (findUser.length > 0) {
-        //     let data = await User.updateOne({login: req.body.login}, {is_online: 1})
-        //     console.log(data)
-        //     u = findUser[0]
-        // } else {
-        //     let create = new User({login: req.body.login, is_online: 1});
-        //     u = await create.save()
-        // }
-    //     res.status(200).json();
-    //   })
-
         httpServer.
             listen(config.get('web-server:port'))
                 .on('listening', async () => {
