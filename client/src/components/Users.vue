@@ -1,7 +1,7 @@
 <template>
   <div class="user">
     <div class="description">
-      <div class="name">
+      <div class="name" @click="selectUser(user._id)">
         {{ user.login }} ->
         {{ status }}
       </div>
@@ -20,5 +20,10 @@ export default {
       return this.user.is_online ? "online" : "offline";
     },
   },
+  methods: {
+    selectUser(id) {
+      this.$emit('selectUser', id)
+    }
+  }
 };
 </script>

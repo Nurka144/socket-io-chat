@@ -8,6 +8,7 @@
         v-for="user in users"
         :key="user._id"
         :user="user"
+        @selectUser="selectUser"
       />
       <div class="row" v-if="!auth">
         <div style="display: flex; justify-content: center; width: 100%; margin-top: 5rem;">
@@ -24,10 +25,13 @@
         </div>
       </div>
       <div v-else>
+        <div v-for="msg of selectedUser.messages" :key="msg">
+          {{msg.content}}
+        </div>
         <div>
           <span v-if="typingState">{{usersTyping}} is typing ...</span>
           <input type="text" class="form-control" @keyup="typing()" v-model="messageData"/>
-          <button type="submit" class="btn btn-primary" @click.prevent="loginUser()">Send</button>
+          <button type="submit" class="btn btn-primary" @click.prevent="onMessage()">Send</button>
         </div>
       </div>
     </div>
@@ -52,13 +56,16 @@ export default {
       users: [],
       messageData: "",
       typingState: false,
-      usersTyping: ""
+      usersTyping: "",
+      selectedUser: {
+        id: "",
+        messages: []
+      }
     }
   },
   created() {
     this.$http.get('http://localhost:3000/api/1.0/users')
       .then(data => this.users = data.data)
-    socket.connect()
     socket.on('users', (data) => {
       this.users = data
     })
@@ -67,16 +74,44 @@ export default {
             return self.indexOf(value) === index;
         }).join(',')
     })
+    socket.on("connect_error", (err) => {
+      if (err.message === "invalid username") {
+        alert(err.message)
+      }
+    });
+    socket.on("private message", ({ content, from }) => {
+      console.log(from)
+      for (let i = 0; i < this.users.length; i++) {
+        const user = this.users[i];
+        if (user._id === from) {
+          this.selectedUser.messages.push({
+            content,
+            fromSelf: false,
+          });
+          if (user !== this.selectedUser) {
+            user.hasNewMessages = true;
+          }
+          break;
+        }
+      }
+    });
   },
   methods: {
     loginUser() {
-      socket.emit('login', {
+      // socket.emit('login', {
+      //   login: this.login
+      // })
+      // socket.on('login', (data) => {
+      //   this.auth = data
+      // })
+      this.$http.post('http://localhost:3000/api/1.0/login', {
         login: this.login
       })
-      socket.on('login', (data) => {
-        this.auth = data
-      })
-    
+        .then(data => {
+          this.auth = data.data
+          socket.auth = {id: this.auth._id}
+          socket.connect();
+        })
     },
     logout() {
       socket.emit('logout', {id: this.auth._id})
@@ -88,8 +123,23 @@ export default {
       } else {
         this.typingState = false
       }
-      console.log(this.auth)
+      socket.id = this.auth._id
       socket.emit('typing', {auth: this.auth, state: this.typingState})
+    },
+    onMessage() {
+      if (this.selectedUser) {
+        socket.emit('message', {
+          content: this.messageData,
+          to: this.selectedUser
+        })
+        this.selectedUser.messages.push({
+            content: this.messageData,
+            fromSelf: true,
+          });
+      }
+    },
+    selectUser(id) {
+      this.selectedUser.id = id
     }
   },
 }

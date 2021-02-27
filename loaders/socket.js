@@ -10,31 +10,37 @@ module.exports = function(server) {
 
     let usersTyping = [];
 
+    
+
     io.on('connection', async function( socket ) {
-        socket.join('some room');
-        socket.on('login', async ({login}) => {
-            const findUser = await User.find({login: login});
-            let user;
-            if (findUser.length > 0) {
-                user = await User.updateOne({login: login}, {is_online: 1});
-                user = findUser[0]  
-            } else {
-                let create = new User({login: req.body.login, is_online: 1});
-                user = await create.save();
-            }
-            getUsers()
-                .then((users) => {
-                    io.to('some room').emit('login', user)
-                    io.to('some room').emit('users', users)
-                })
+        console.log(socket.handshake.auth)
+        if (socket.handshake.auth) {
+            socket.join(`room-${socket.handshake.auth.id}`)
+        }
+        // socket.on('login', async ({login}) => {
+        //     const findUser = await User.find({login: login});
+        //     let user;
+        //     if (findUser.length > 0) {
+        //         user = await User.updateOne({login: login}, {is_online: 1});
+        //         user = findUser[0]  
+        //     } else {
+        //         let create = new User({login: req.body.login, is_online: 1});
+        //         user = await create.save();
+        //     }
+        //     getUsers()
+        //         .then((users) => {
+        //             socket.join(`room-${user._id}`)
+        //             socket.emit('login', user)
+        //             socket.emit('users', users)
+        //         })
             
-        })
+        // })
 
         socket.on('logout', async ({id}) => {
             await User.updateOne({_id: id}, {is_online: 0})
             getUsers()
                 .then((users) => {
-                    io.to('some room').emit('users', users)
+                    socket.emit('users', users)
                 })
         })
 
@@ -48,10 +54,18 @@ module.exports = function(server) {
                     }
                 })
             }
-            console.log(usersTyping)
-            io.to('some room').emit('typingUsers', usersTyping)
+            socket.broadcast.emit('typingUsers', usersTyping)
         })
 
+        socket.on("message", ({content, to}) => {
+            console.log(socket)
+            let roomId = to.id
+            console.log(`room-${roomId}`)
+            socket.to(`room-${roomId}`).emit("private message", {
+                content,
+                from: socket.handshake.auth.id,
+              });
+        })
 
         const getUsers = async () => {
             return new Promise(async (resolve, reject) => {
