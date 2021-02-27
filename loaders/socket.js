@@ -8,6 +8,7 @@ module.exports = function(server) {
           }
     });
 
+    let usersTyping = [];
 
     io.on('connection', async function( socket ) {
         socket.join('some room');
@@ -35,6 +36,20 @@ module.exports = function(server) {
                 .then((users) => {
                     io.to('some room').emit('users', users)
                 })
+        })
+
+        socket.on('typing', ({auth, state}) => {
+            if (state) {
+                usersTyping.push(auth.login)
+            } else {
+                usersTyping.map((item, index) => {
+                    if (item == auth.login) {
+                        usersTyping.splice(index, 1)
+                    }
+                })
+            }
+            console.log(usersTyping)
+            io.to('some room').emit('typingUsers', usersTyping)
         })
 
 

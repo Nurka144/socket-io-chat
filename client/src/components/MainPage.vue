@@ -25,7 +25,8 @@
       </div>
       <div v-else>
         <div>
-          <input type="text" class="form-control"/>
+          <span v-if="typingState">{{usersTyping}} is typing ...</span>
+          <input type="text" class="form-control" @keyup="typing()" v-model="messageData"/>
           <button type="submit" class="btn btn-primary" @click.prevent="loginUser()">Send</button>
         </div>
       </div>
@@ -48,7 +49,10 @@ export default {
     return {
       login: "",
       auth: "",
-      users: []
+      users: [],
+      messageData: "",
+      typingState: false,
+      usersTyping: ""
     }
   },
   created() {
@@ -57,6 +61,11 @@ export default {
     socket.connect()
     socket.on('users', (data) => {
       this.users = data
+    })
+    socket.on('typingUsers', (data) => {
+      this.usersTyping = data.filter(function(value, index, self) { 
+            return self.indexOf(value) === index;
+        }).join(',')
     })
   },
   methods: {
@@ -72,6 +81,15 @@ export default {
     logout() {
       socket.emit('logout', {id: this.auth._id})
       this.auth = ""
+    },
+    typing() {
+      if (this.messageData) {
+        this.typingState = true
+      } else {
+        this.typingState = false
+      }
+      console.log(this.auth)
+      socket.emit('typing', {auth: this.auth, state: this.typingState})
     }
   },
 }

@@ -8,7 +8,11 @@ const Schema = mongoose.Schema;
 const userScheme = new Schema({login: String, is_online: Number});
 const User = mongoose.model("User", userScheme);
 
+const msgSchema = new Schema({message: String, sender: String});
+const Message = mongoose.model("Message", msgSchema);
+
 module.exports.User = User;
+module.exports.Message = Message;
 
 const log = require('../config/winston');
 const config = require('../config/config');
